@@ -64,7 +64,7 @@ class assInfotext extends assQuestion
 	{
 		// Please add here your own check for question completeness
 		// The parent function will always return false
-		if(($this->title) and ($this->author) and ($this->question))
+		if(($this->title) and ($this->author) and ($this->question) and ($this->getPoints >= 0))
 		{
 			return true;
 		}

@@ -56,7 +56,8 @@ class assInfotextGUI extends assQuestionGUI
 
 		$save = $this->isSaveCommand();
 		$this->getQuestionTemplate();
-
+		$plugin = $this->object->getPlugin();
+		
 		include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
 		$form = new ilPropertyFormGUI();
 		$form->setFormAction($this->ctrl->getFormAction($this));
@@ -66,6 +67,16 @@ class assInfotextGUI extends assQuestionGUI
 		$form->setId("infotext");
 
 		$this->addBasicQuestionFormProperties($form);
+		
+		// points
+		$points = new ilNumberInputGUI($plugin->txt("points"), "points");
+		$points->setSize(3);
+		$points->setMinValue(0);
+		$points->allowDecimals(1);
+		$points->setRequired(true);
+		$points->setValue($this->object->getPoints());
+		$form->addItem($points);
+		
 		$this->populateTaxonomyFormSection($form);
 		$this->addQuestionFormCommandButtons($form);
 
@@ -98,7 +109,8 @@ class assInfotextGUI extends assQuestionGUI
 		if (!$hasErrors)
 		{
 			$this->writeQuestionGenericPostData();
-			$this->object->setPoints(0);	
+			$this->object->setPoints($_POST["points"]);
+			//$this->object->setPoints(0);	
 			$this->saveTaxonomyAssignments();
 			return 0;
 		}
