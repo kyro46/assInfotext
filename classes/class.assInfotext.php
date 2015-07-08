@@ -289,6 +289,19 @@ class assInfotext extends assQuestion
 			$pass = ilObjTest::_getPass($active_id);
 		}
 
+		$affectedRows = $ilDB->manipulateF("DELETE FROM tst_solutions WHERE active_fi = %s AND question_fi = %s AND pass = %s",
+			array(
+				"integer", 
+				"integer",
+				"integer"
+			),
+			array(
+				$active_id,
+				$this->getId(),
+				$pass
+			)
+		);
+		
 		// save the answers of the learner to tst_solution table
 		// this data is question type specific
 		// it is used used by calculateReachedPoints() in this class
