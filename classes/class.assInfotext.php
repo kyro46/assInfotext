@@ -264,7 +264,7 @@ class assInfotext extends assQuestion
 	 * @access public
 	 * @see  assQuestion::calculateReachedPoints()
 	 */
-	function calculateReachedPoints($active_id, $pass = NULL, $returndetails = FALSE)
+	function calculateReachedPoints($active_id, $pass = NULL, $authorizedSolution = true, $returndetails = false)
 	{
 		return 0;
 	} 
@@ -278,7 +278,7 @@ class assInfotext extends assQuestion
 	 * @access 	public
 	 * @see 	assQuestion::saveWorkingData()
 	 */
-	function saveWorkingData($active_id, $pass = NULL)
+	function saveWorkingData($active_id, $pass = NULL, $authorized = true)
 	{
 		global $ilDB;
 		global $ilUser;

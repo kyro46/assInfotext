@@ -1,5 +1,5 @@
 # assInfotext
-Infotext/Restudy-Questiontypeplugin for ILIAS 4.4.x/5.0.x
+Infotext/Restudy-Questiontypeplugin for ILIAS 4.4.x/5.0.x/5.1.x
 
 ### Questiontype that allows inserting an additional element in your test, without any inputfields ###
 
