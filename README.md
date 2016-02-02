@@ -21,3 +21,6 @@ Install the plugin to
 * Customizing/global/plugins/Modules/TestQuestionPool/Questions
 
 and activate it in the ILIAS-Admin-GUI. Activate manual correction.
+
+### Credits ###
+* Developing plugin for ILIAS 4.4+ by Christoph Jobst, University Halle 2014/2015/2016
