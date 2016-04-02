@@ -1,5 +1,7 @@
 # assInfotext
-Infotext/Restudy-Questiontypeplugin for ILIAS 4.4.x/5.0.x/5.1.x
+Infotext/Restudy-Questiontypeplugin for ILIAS 5.1.x
+
+For ILIAS 4.4 and 5.0 see the [**Releases**](https://github.com/kyro46/assInfotext/releases)
 
 ### Questiontype that allows inserting an additional element in your test, without any inputfields ###
 
@@ -17,10 +19,15 @@ This may be usefull for:
 
 ### Usage ###
 
-Install the plugin to
-* Customizing/global/plugins/Modules/TestQuestionPool/Questions
+Install the plugin
 
+```bash
+mkdir -p Customizing/global/plugins/Modules/TestQuestionPool/Questions  
+cd Customizing/global/plugins/Modules/TestQuestionPool/Questions
+git clone https://github.com/kyro46/assInfotext.git
+```
 and activate it in the ILIAS-Admin-GUI. Activate manual correction.
 
+
 ### Credits ###
-* Developing plugin for ILIAS 4.4+ by Christoph Jobst, University Halle 2014/2015/2016
+* Development for ILIAS 4.4+ by Christoph Jobst, University Halle 2014/2015/2016
