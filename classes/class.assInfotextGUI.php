@@ -109,8 +109,7 @@ class assInfotextGUI extends assQuestionGUI
 		if (!$hasErrors)
 		{
 			$this->writeQuestionGenericPostData();
-			$this->object->setPoints($_POST["points"]);
-			//$this->object->setPoints(0);	
+			$this->object->setPoints( str_replace( ",", ".", $_POST["points"] ));
 			$this->saveTaxonomyAssignments();
 			return 0;
 		}
