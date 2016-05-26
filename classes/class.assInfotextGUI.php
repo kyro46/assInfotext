@@ -235,6 +235,13 @@ class assInfotextGUI extends assQuestionGUI
 			$points = isset($solution["points"]) ? $solution["points"] : "";
 		}
 	*/
+		
+		if ($show_correct_solution)
+		{
+			return $this->object->getPlugin()->txt("bestSolutionNa");
+		}
+		
+		
 		// get the solution template
 		$template = $this->plugin->getTemplate("tpl.il_as_qpl_infotext_output.html");
 
