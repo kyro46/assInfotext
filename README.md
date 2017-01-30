@@ -1,7 +1,7 @@
 # assInfotext
-Infotext/Restudy-Questiontypeplugin for ILIAS 5.1.x
+Infotext/Restudy-Questiontypeplugin for ILIAS 5.2.x
 
-For ILIAS 4.4 and 5.0 see the [**Releases**](https://github.com/kyro46/assInfotext/releases)
+For ILIAS 4.4, 5.0 and 5.1 see the [**Releases**](https://github.com/kyro46/assInfotext/releases)
 
 ### Questiontype that allows inserting an additional element in your test, without any inputfields ###
 

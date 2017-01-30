@@ -353,7 +353,7 @@ class assInfotext extends assQuestion
 	 * @param integer $pass
 	 * @param boolean $obligationsAnswered
 	 */
-	protected function reworkWorkingData($active_id, $pass, $obligationsAnswered)
+	protected function reworkWorkingData($active_id, $pass, $obligationsAnswered, $authorized)
 	{
 		// normally nothing needs to be reworked
 	}

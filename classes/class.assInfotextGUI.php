@@ -245,11 +245,12 @@ class assInfotextGUI extends assQuestionGUI
 		// get the solution template
 		$template = $this->plugin->getTemplate("tpl.il_as_qpl_infotext_output.html");
 
+		/*
 		if ($active_id > 0 and $graphicalOutput)
 		{
 			// output of ok/not ok icons for user entered solutions
-			// in this Infotext we have ony one relevant input field (points)
-			// so we just need to tet the icon beneath this field
+			// in Infotext we have no input fields
+			// so we don't need to set icons for any fields
 			// question types with partial answers may have a more complex output
 			if ($this->object->getReachedPoints($active_id, $pass) == 0)
 			{
@@ -266,6 +267,7 @@ class assInfotextGUI extends assQuestionGUI
 				$template->parseCurrentBlock();
 			}
 		}
+		*/
 /*
 		// fill the template variables
 		// adapt this to your structure of answers
