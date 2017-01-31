@@ -404,18 +404,23 @@ class assInfotext extends assQuestion
 	 * @access public
 	 * @see assQuestion::setExportDetailsXLS()
 	 */
-	public function setExportDetailsXLS(&$worksheet, $startrow, $active_id, $pass, &$format_title, &$format_bold)
+	public function setExportDetailsXLS($worksheet, $startrow, $active_id, $pass)
 	{
+		parent::setExportDetailsXLS($worksheet, $startrow, $active_id, $pass);
+				
+		//not needed anymore in 5.2?
+		/*
 		global $lng;
-
+				
 		include_once ("./Services/Excel/classes/class.ilExcelUtils.php");
 		$solutions = $this->getSolutionValues($active_id, $pass);
-
+		
 		$worksheet->writeString($startrow, 0, ilExcelUtils::_convert_text($this->plugin->txt($this->getQuestionType())), $format_title);
 		$worksheet->writeString($startrow, 1, ilExcelUtils::_convert_text($this->getTitle()), $format_title);
-		$i = 1;
 
 		return $startrow + $i + 1;
+		*/
+		return $startrow + 1;
 	}
 
 	/**
