@@ -1,5 +1,5 @@
 # assInfotext
-Infotext/Restudy-Questiontypeplugin for ILIAS 5.2.x
+Infotext/Restudy-Questiontypeplugin for ILIAS 5.2.x and 5.3.x
 
 For ILIAS 4.4, 5.0 and 5.1 see the [**Releases**](https://github.com/kyro46/assInfotext/releases)
 
@@ -30,4 +30,4 @@ and activate it in the ILIAS-Admin-GUI. Activate manual correction.
 
 
 ### Credits ###
-* Development for ILIAS 4.4+ by Christoph Jobst, University Halle 2014/2015/2016
+* Development for ILIAS 4.4+ by Christoph Jobst, University Halle and Leipzig
