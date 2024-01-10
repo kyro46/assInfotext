@@ -11,8 +11,8 @@ include_once "./Modules/TestQuestionPool/classes/class.ilQuestionsPlugin.php";
 */
 class ilassInfotextPlugin extends ilQuestionsPlugin
 {
-		final function getPluginName()
-		{
+    final function getPluginName(): string
+    {
 			return "assInfotext";
 		}
 		
@@ -21,7 +21,7 @@ class ilassInfotextPlugin extends ilQuestionsPlugin
 			return "assInfotext";
 		}
 		
-		final function getQuestionTypeTranslation()
+		final function getQuestionTypeTranslation(): string
 		{
 			return $this->txt($this->getQuestionType());
 		}

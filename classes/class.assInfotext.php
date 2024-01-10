@@ -1,8 +1,5 @@
 <?php
 
-include_once "./Modules/TestQuestionPool/classes/class.assQuestion.php";
-include_once "./Modules/Test/classes/inc.AssessmentConstants.php";
-
 /**
  * Infotext class for question type plugins
  *
@@ -15,17 +12,23 @@ class assInfotext extends assQuestion
 	/**
 	 * @var ilassInfotextPlugin	The plugin object
 	 */
-	var $plugin = null;
+    protected $plugin = null;
 
 
-	/**
-	 * Constructor
-	 *
-	 * The constructor takes possible arguments and creates an instance of the question object.
-	 *
-	 * @access public
-	 * @see assQuestion:assQuestion()
-	 */
+    /**
+     * Constructor
+     *
+     * The constructor takes possible arguments and creates an instance of the question object.
+     *
+     * @param string $title A title string to describe the question
+     * @param string $comment A comment string to describe the question
+     * @param string $author A string containing the name of the questions author
+     * @param integer $owner A numerical ID to identify the owner/creator
+     * @param string $question Question text
+     * @access public
+     *
+     * @see assQuestion:assQuestion()
+     */
 	function __construct( 
 		$title = "",
 		$comment = "",
@@ -41,60 +44,104 @@ class assInfotext extends assQuestion
 	}
 
 	/**
+	 * Returns the question type of the question
+	 *
+	 * @return string The question type of the question
+	 */
+	public function getQuestionType() : string
+	{
+	    return "assInfotext";
+	}
+
+	/**
+	 * Returns the names of the additional question data tables
+	 *
+	 * All tables must have a 'question_fi' column.
+	 * Data from these tables will be deleted if a question is deleted
+	 *
+	 * @return mixed 	the name(s) of the additional tables (array or string)
+	 */
+	public function getAdditionalTableName()
+	{
+	    return '';
+	}
+	
+	/**
+	 * Collects all texts in the question which could contain media objects
+	 * which were created with the Rich Text Editor
+	 */
+	protected function getRTETextWithMediaObjects(): string
+	{
+	    $text = parent::getRTETextWithMediaObjects();
+	    
+	    // eventually add the content of question type specific text fields
+	    // ..
+	    
+	    return (string) $text;
+	}
+	
+	/**
 	 * Get the plugin object
 	 *
 	 * @return object The plugin object
 	 */
-	public function getPlugin() {
-		if ($this->plugin == null)
-		{
-			include_once "./Services/Component/classes/class.ilPlugin.php";
-			$this->plugin = ilPlugin::getPluginObject(IL_COMP_MODULE, "TestQuestionPool", "qst", "assInfotext");
-				
-		}
-		return $this->plugin;
+	public function getPlugin()
+	{
+	    global $DIC;
+	    
+	    if ($this->plugin == null)
+	    {
+	        /** @var ilComponentFactory $component_factory */
+	        $component_factory = $DIC["component.factory"];
+	        $this->plugin = $component_factory->getPlugin('infotext');
+	    }
+	    return $this->plugin;
 	}
-
+	
 	/**
 	 * Returns true, if the question is complete
 	 *
 	 * @return boolean True, if the question is complete for use, otherwise false
 	 */
-	public function isComplete()
+	public function isComplete(): bool
 	{
-		// Please add here your own check for question completeness
-		// The parent function will always return false
-		if(($this->title) and ($this->author) and ($this->question) and ($this->getPoints >= 0))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+	    // Please add here your own check for question completeness
+	    // The parent function will always return false
+	    if(!empty($this->title) && !empty($this->author) && !empty($this->question) && $this->getMaximumPoints() >= 0)
+	    {
+	        return true;
+	    }
+	    else
+	    {
+	        return false;
+	    }
 	}
 
 	/**
 	 * Saves a question object to a database
-	 * 
-	 * @param	string		original id
+	 *
+	 * @param	string		$original_id
 	 * @access 	public
 	 * @see assQuestion::saveToDb()
 	 */
-	function saveToDb($original_id = "")
+	function saveToDb($original_id = ''): void
 	{
-
-		// save the basic data (implemented in parent)
-		// a new question is created if the id is -1
-		// afterwards the new id is set
-		$this->saveQuestionDataToDb($original_id);
-
-		// Now you can save additional data
-		// ...
-
-		// save stuff like suggested solutions
-		// update the question time stamp and completion status
-		parent::saveToDb();
+	    
+	    // save the basic data (implemented in parent)
+	    // a new question is created if the id is -1
+	    // afterwards the new id is set
+	    if ($original_id == '') {
+	        $this->saveQuestionDataToDb();
+	    } else {
+	        $this->saveQuestionDataToDb($original_id);
+	    }
+	    
+	    // Now you can save additional data
+	    // ...
+	    
+	    // save stuff like suggested solutions
+	    // update the question time stamp and completion status
+	    parent::saveToDb();
 	}
 
 	/**
@@ -104,45 +151,44 @@ class assInfotext extends assQuestion
 	 * @param integer $question_id A unique key which defines the question in the database
 	 * @see assQuestion::loadFromDb()
 	 */
-	public function loadFromDb($question_id)
+	public function loadFromDb($question_id) : void
 	{
-		global $ilDB;
-                
+	    global $DIC;
+	    $ilDB = $DIC->database();
+	    
 		// load the basic question data
 		$result = $ilDB->query("SELECT qpl_questions.* FROM qpl_questions WHERE question_id = "
 				. $ilDB->quote($question_id, 'integer'));
-
-		$data = $ilDB->fetchAssoc($result);
-		$this->setId($question_id);
-		$this->setTitle($data["title"]);
-		$this->setComment($data["description"]);
-		$this->setSuggestedSolution($data["solution_hint"]);
-		$this->setOriginalId($data["original_id"]);
-		$this->setObjId($data["obj_fi"]);
-		$this->setAuthor($data["author"]);
-		$this->setOwner($data["owner"]);
-		$this->setPoints($data["points"]);
-
-		include_once("./Services/RTE/classes/class.ilRTE.php");
-		$this->setQuestion(ilRTE::_replaceMediaObjectImageSrc($data["question_text"], 1));
-		$this->setEstimatedWorkingTime(substr($data["working_time"], 0, 2), substr($data["working_time"], 3, 2), substr($data["working_time"], 6, 2));
-
 		
-		try {
-			$this->setLifecycle(ilAssQuestionLifecycle::getInstance($data['lifecycle']));
-		} catch (ilTestQuestionPoolInvalidArgumentException $e) {
-			$this->setLifecycle(ilAssQuestionLifecycle::getDraftInstance());
-		}
-		
-		// now you can load additional data
-		// ...
-
-		try
-		{
-			$this->setAdditionalContentEditingMode($data['add_cont_edit_mode']);
-		}
-		catch(ilTestQuestionPoolException $e)
-		{
+		if ($result->numRows() > 0) {
+		    $data = $ilDB->fetchAssoc($result);
+		    $this->setId($question_id);
+		    $this->setObjId($data['obj_fi']);
+		    $this->setOriginalId($data['original_id']);
+		    $this->setOwner($data['owner']);
+		    $this->setTitle((string) $data['title']);
+		    $this->setAuthor($data['author']);
+		    $this->setPoints($data['points']);
+		    $this->setComment((string) $data['description']);
+		    $this->setSuggestedSolution((string) $data["solution_hint"]);
+		    
+		    $this->setQuestion(ilRTE::_replaceMediaObjectImageSrc((string) $data['question_text'], 1));
+		    try {
+		        $this->setLifecycle(ilAssQuestionLifecycle::getInstance($data['lifecycle']));
+		    } catch (ilTestQuestionPoolInvalidArgumentException $e) {
+		        $this->setLifecycle(ilAssQuestionLifecycle::getDraftInstance());
+		    }
+		    
+		    // now you can load additional data
+		    // ...
+		    
+		    try
+		    {
+		        $this->setAdditionalContentEditingMode($data['add_cont_edit_mode']);
+		    }
+		    catch(ilTestQuestionPoolException $e)
+		    {
+		    }
 		}
 
 		// loads additional stuff like suggested solutions
@@ -156,12 +202,12 @@ class assInfotext extends assQuestion
 	 *
 	 * @access public
 	 */
-	function duplicate($for_test = true, $title = "", $author = "", $owner = "", $testObjId = null)
+	public function duplicate(bool $for_test = true, string $title = "", string $author = "", string $owner = "", $testObjId = null): int
 	{
 		if ($this->getId() <= 0)
 		{
 			// The question has not been saved. It cannot be duplicated
-			return;
+			return 0;
 		}
 
 		// make a real clone to keep the object unchanged
@@ -175,26 +221,26 @@ class assInfotext extends assQuestion
 			$clone->setObjId($testObjId);
 		}
 
-		if ($title)
+		if (!empty($title))
 		{
-			$clone->setTitle($title);
+		    $clone->setTitle($title);
 		}
-		if ($author)
+		if (!empty($author))
 		{
-			$clone->setAuthor($author);
+		    $clone->setAuthor($author);
 		}
-		if ($owner)
+		if (!empty($owner))
 		{
-			$clone->setOwner($owner);
-		}		
+		    $clone->setOwner($owner);
+		}
 		
 		if ($for_test)
 		{
-			$clone->saveToDb($original_id, false);
+		    $clone->saveToDb($original_id);
 		}
 		else
 		{
-			$clone->saveToDb('', false);
+		    $clone->saveToDb();
 		}		
 
 		// copy question page content
@@ -212,9 +258,12 @@ class assInfotext extends assQuestion
 	 * Copies a question
 	 * This is used when a question is copied on a question pool
 	 *
-	 * @access public
+	 * @param integer	$target_questionpool_id
+	 * @param string	$title
+	 *
+	 * @return void|integer Id of the clone or nothing.
 	 */
-	function copyObject($target_questionpool_id, $title = "")
+	function copyObject($target_questionpool_id, $title = '')
 	{
 		if ($this->getId() <= 0)
 		{
@@ -229,14 +278,14 @@ class assInfotext extends assQuestion
 		$source_questionpool_id = $this->getObjId();
 		$clone->setId(-1);
 		$clone->setObjId($target_questionpool_id);
-		if ($title)
+		if (!empty($title))
 		{
 			$clone->setTitle($title);
 		}
 				
 		// save the clone data
-		$clone->saveToDb('', false);
-
+		$clone->saveToDb();
+		
 		// copy question page content
 		$clone->copyPageOfQuestion($original_id);
 		// copy XHTML media objects
@@ -249,17 +298,92 @@ class assInfotext extends assQuestion
 	}
 
 	/**
+	 * Create a new original question in a question pool for a test question
+	 * @param int $targetParentId			id of the target question pool
+	 * @param string $targetQuestionTitle
+	 * @return int|void
+	 */
+	public function createNewOriginalFromThisDuplicate($targetParentId, $targetQuestionTitle = '')
+	{
+	    if ($this->id <= 0)
+	    {
+	        // The question has not been saved. It cannot be duplicated
+	        return;
+	    }
+	    
+	    $sourceQuestionId = $this->id;
+	    $sourceParentId = $this->getObjId();
+	    
+	    // make a real clone to keep the object unchanged
+	    $clone = clone $this;
+	    $clone->setId(-1);
+	    
+	    $clone->setObjId($targetParentId);
+	    
+	    if (!empty($targetQuestionTitle))
+	    {
+	        $clone->setTitle($targetQuestionTitle);
+	    }
+	    
+	    $clone->saveToDb();
+	    // copy question page content
+	    $clone->copyPageOfQuestion($sourceQuestionId);
+	    // copy XHTML media objects
+	    $clone->copyXHTMLMediaObjectsOfQuestion($sourceQuestionId);
+	    
+	    $clone->onCopy($sourceParentId, $sourceQuestionId, $clone->getObjId(), $clone->getId());
+	    
+	    return $clone->getId();
+	}
+	
+	
+	/**
 	 * Synchronize a question with its original
 	 * You need to extend this function if a question has additional data that needs to be synchronized
 	 * 
 	 * @access public
 	 */
-	function syncWithOriginal()
+	function syncWithOriginal() : void
 	{
 		parent::syncWithOriginal();
 	}
 	
-
+	/**
+	 * Get the submitted user input as a serializable value
+	 *
+	 * @return mixed user input (scalar, object or array)
+	 */
+	protected function getSolutionSubmit()
+	{
+	    return 0;
+	}
+	
+	/**
+	 * Get a stored solution for a user and test pass
+	 * This is a wrapper to provide the same structure as getSolutionSubmit()
+	 *
+	 * @param int 	$active_id		active_id of hte user
+	 * @param int	$pass			number of the test pass
+	 * @param bool	$authorized		get the authorized solution
+	 *
+	 * @return	array	('value1' => string|null, 'value2' => float|null)
+	 */
+	public function getSolutionStored($active_id, $pass, $authorized = null)
+	{
+	    // no need for this qst
+	    return 0;
+	}
+	
+	/**
+	 * Calculate the reached points for a submitted user input
+	 *
+	 * @return  float	reached points
+	 */
+	protected function calculateReachedPointsForSolution($solution)
+	{
+	    return 0;
+	}
+	
 	/**
 	 * Returns the points, a learner has reached answering the question
 	 * The points are calculated from the given answers.
@@ -273,10 +397,9 @@ class assInfotext extends assQuestion
 	 */
 	function calculateReachedPoints($active_id, $pass = NULL, $authorizedSolution = true, $returndetails = false)
 	{
-		return 0;
+	    return 0;
 	} 
-
-
+	
 	/**
 	 * Saves the learners input of the question to the database
 	 *
@@ -285,7 +408,7 @@ class assInfotext extends assQuestion
 	 * @access 	public
 	 * @see 	assQuestion::saveWorkingData()
 	 */
-	function saveWorkingData($active_id, $pass = NULL, $authorized = true)
+	function saveWorkingData($active_id, $pass = NULL, $authorized = true) : bool
 	{
 		global $ilDB;
 		global $ilUser;
@@ -331,21 +454,17 @@ class assInfotext extends assQuestion
 			$entered_values = TRUE;
 		}
 
-		if ($entered_values)
+		// Log whether the user entered values
+		if (ilObjAssessmentFolder::_enabledAssessmentLogging())
 		{
-			include_once ("./Modules/Test/classes/class.ilObjAssessmentFolder.php");
-			if (ilObjAssessmentFolder::_enabledAssessmentLogging())
-			{
-				$this->logAction($this->lng->txtlng("assessment", "log_user_entered_values", ilObjAssessmentFolder::_getLogLanguage()), $active_id, $this->getId());
-			}
-		}
-		else
-		{
-			include_once ("./Modules/Test/classes/class.ilObjAssessmentFolder.php");
-			if (ilObjAssessmentFolder::_enabledAssessmentLogging())
-			{
-				$this->logAction($this->lng->txtlng("assessment", "log_user_not_entered_values", ilObjAssessmentFolder::_getLogLanguage()), $active_id, $this->getId());
-			}
+		    assQuestion::logAction($this->lng->txtlng(
+		        'assessment',
+		        $entered_values ? 'log_user_entered_values' : 'log_user_not_entered_values',
+		        ilObjAssessmentFolder::_getLogLanguage()
+		        ),
+		        $active_id,
+		        $this->getId()
+		        );
 		}
 
 		return true;
@@ -365,53 +484,13 @@ class assInfotext extends assQuestion
 		// normally nothing needs to be reworked
 	}
 
-
-	/**
-	 * Returns the question type of the question
-	 *
-	 * @return string The question type of the question
-	 */
-	public function getQuestionType()
-	{
-		return "assInfotext";
-	}
-
-	/**
-	 * Returns the names of the additional question data tables
-	 *
-	 * all tables must have a 'question_fi' column
-	 * data from these tables will be deleted if a question is deleted
-	 *
-	 * @return mixed 	the name(s) of the additional tables (array or string)
-	 */
-	public function getAdditionalTableName()
-	{
-		return "";
-	}
-
-	
-	/**
-	 * Collects all text in the question which could contain media objects
-	 * which were created with the Rich Text Editor
-	 */
-	function getRTETextWithMediaObjects()
-	{
-		$text = parent::getRTETextWithMediaObjects();
-
-		// eventually add the content of question type specific text fields
-		// ..
-
-		return $text;
-	}
-
-
 	/**
 	 * Creates an Excel worksheet for the detailed cumulated results of this question
 	 *
 	 * @access public
 	 * @see assQuestion::setExportDetailsXLS()
 	 */
-	public function setExportDetailsXLS($worksheet, $startrow, $active_id, $pass)
+	public function setExportDetailsXLS(ilAssExcelFormatHelper $worksheet, int $startrow, int $active_id, int $pass): int
 	{
 		parent::setExportDetailsXLS($worksheet, $startrow, $active_id, $pass);
 				
@@ -438,11 +517,12 @@ class assInfotext extends assQuestion
 	 * @access public
 	 * @see assQuestion::fromXML()
 	 */
-	function fromXML(&$item, &$questionpool_id, &$tst_id, &$tst_object, &$question_counter, &$import_mapping, array $solutionhints = [])
+	function fromXML($item, int $questionpool_id, ?int $tst_id, &$tst_object, int &$question_counter,  array $import_mapping, array &$solutionhints = []): array
 	{
-		$this->getPlugin()->includeClass("import/qti12/class.assInfotextImport.php");
 		$import = new assInfotextImport($this);
 		$import->fromXML($item, $questionpool_id, $tst_id, $tst_object, $question_counter, $import_mapping, $solutionhints);
+		
+		return $import_mapping;
 	}
 
 	/**
@@ -454,87 +534,16 @@ class assInfotext extends assQuestion
 	 * @access public
 	 * @see assQuestion::toXML()
 	 */
-	function toXML($a_include_header = true, $a_include_binary = true, $a_shuffle = false, $test_output = false, $force_image_references = false)
+	function toXML(
+	    bool $a_include_header = true,
+	    bool $a_include_binary = true,
+	    bool $a_shuffle = false,
+	    bool $test_output = false,
+	    bool $force_image_references = false
+	    ): string
 	{
-		$this->getPlugin()->includeClass("export/qti12/class.assInfotextExport.php");
 		$export = new assInfotextExport($this);
 		return $export->toXML($a_include_header, $a_include_binary, $a_shuffle, $test_output, $force_image_references);
 	}
-	
-
-	//ILIAS 5.0.x compability-code:
-	
-	/**
-	 * Get the submitted user input as a serializable value
-	 *
-	 * @return mixed user input (scalar, object or array)
-	 */
-	public function getSolutionSubmit()
-	{
-		return 0;
-	}
-	
-	/**
-	 * Calculate the reached points for a submitted user input
-	 *
-	 * @param mixed user input (scalar, object or array)
-	 */
-	public function calculateReachedPointsforSolution($solution)
-	{
-		return 0;
-	}
-	
-	/**
-	 * Get all available expression types for a specific question
-	 *
-	 * @return array
-	*/
-	public function getExpressionTypes()
-	{
-		return 0;	
-	}
-	
-	/**
-	 * Get the user solution for a question by active_id and the test pass
-	 *
-	 * @param int $active_id
-	 * @param int $pass
-	 *
-	 * @return ilUserQuestionResult
-	*/
-	public function getUserQuestionResult($active_id, $pass)
-	{
-		return 0;
-	}
-	
-	/**
-	 * If index is null, the function returns an array with all anwser options
-	 * Else it returns the specific answer option
-	 *
-	 * @param null|int $index
-	 *
-	 * @return array|ASS_AnswerSimple
-	*/
-	public function getAvailableAnswerOptions($index = null)
-	{
-		return 0;
-	}
-	
-	/**
-	 * Get all available operations for a specific question
-	 *
-	 * @param string $expression
-	 *
-	 * @internal param string $expression_type
-	 * @return array
-	*/
-	public function getOperators($expression)
-	{
-		require_once "./Modules/TestQuestionPool/classes/class.ilOperatorsExpressionMapping.php";
-		return ilOperatorsExpressionMapping::getOperatorsByExpression($expression);
-	}	
-	
-	// End of ILIAS 5.0.x compabiltiy-code
-	
 }
 ?>
