@@ -202,7 +202,7 @@ class assInfotext extends assQuestion
 	 *
 	 * @access public
 	 */
-	public function duplicate(bool $for_test = true, string $title = "", string $author = "", string $owner = "", $testObjId = null): int
+	function duplicate($for_test = true, $title = "", $author = "", $owner = "", $testObjId = null) : int
 	{
 		if ($this->getId() <= 0)
 		{
@@ -507,43 +507,6 @@ class assInfotext extends assQuestion
 		return $startrow + $i + 1;
 		*/
 		return $startrow + 1;
-	}
-
-	/**
-	 * Creates a question from a QTI file
-	 * Receives parameters from a QTI parser and creates a valid ILIAS question object
-	 * Extension needed to get the plugin path for the import class
-	 *
-	 * @access public
-	 * @see assQuestion::fromXML()
-	 */
-	function fromXML($item, int $questionpool_id, ?int $tst_id, &$tst_object, int &$question_counter,  array $import_mapping, array &$solutionhints = []): array
-	{
-		$import = new assInfotextImport($this);
-		$import->fromXML($item, $questionpool_id, $tst_id, $tst_object, $question_counter, $import_mapping, $solutionhints);
-		
-		return $import_mapping;
-	}
-
-	/**
-	 * Returns a QTI xml representation of the question and sets the internal
-	 * domxml variable with the DOM XML representation of the QTI xml representation
-	 * Extension needed to get the plugin path for the import class
-	 *
-	 * @return string The QTI xml representation of the question
-	 * @access public
-	 * @see assQuestion::toXML()
-	 */
-	function toXML(
-	    bool $a_include_header = true,
-	    bool $a_include_binary = true,
-	    bool $a_shuffle = false,
-	    bool $test_output = false,
-	    bool $force_image_references = false
-	    ): string
-	{
-		$export = new assInfotextExport($this);
-		return $export->toXML($a_include_header, $a_include_binary, $a_shuffle, $test_output, $force_image_references);
 	}
 }
 ?>
