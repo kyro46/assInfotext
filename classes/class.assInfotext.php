@@ -170,7 +170,7 @@ class assInfotext extends assQuestion
 		    $this->setAuthor($data['author']);
 		    $this->setPoints($data['points']);
 		    $this->setComment((string) $data['description']);
-		    $this->setSuggestedSolution((string) $data["solution_hint"]);
+		    //$this->setSuggestedSolution((string) $data["solution_hint"]); // removed from qpl_questions
 		    
 		    $this->setQuestion(ilRTE::_replaceMediaObjectImageSrc((string) $data['question_text'], 1));
 		    try {
