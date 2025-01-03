@@ -153,9 +153,8 @@ class assInfotext extends assQuestion
 	 */
 	public function loadFromDb($question_id) : void
 	{
-	    global $DIC;
-	    $ilDB = $DIC->database();
-	    
+        global $DIC;
+        $ilDB = $DIC['ilDB'];	    
 		// load the basic question data
 		$result = $ilDB->query("SELECT qpl_questions.* FROM qpl_questions WHERE question_id = "
 				. $ilDB->quote($question_id, 'integer'));
@@ -170,7 +169,6 @@ class assInfotext extends assQuestion
 		    $this->setAuthor($data['author']);
 		    $this->setPoints($data['points']);
 		    $this->setComment((string) $data['description']);
-		    //$this->setSuggestedSolution((string) $data["solution_hint"]); // removed from qpl_questions
 		    
 		    $this->setQuestion(ilRTE::_replaceMediaObjectImageSrc((string) $data['question_text'], 1));
 		    try {
@@ -207,13 +205,13 @@ class assInfotext extends assQuestion
 		if ($this->getId() <= 0)
 		{
 			// The question has not been saved. It cannot be duplicated
-			return 0;
+			return -1;
 		}
 
 		// make a real clone to keep the object unchanged
 		$clone = clone $this;
 							
-		$original_id = assQuestion::_getOriginalId($this->getId());
+		$original_id = $this->questioninfo->getOriginalId($this->id);
 		$clone->setId(-1);
 
 		if( (int) $testObjId > 0 )
@@ -390,20 +388,24 @@ class assInfotext extends assQuestion
 	 *
 	 * @param integer $active 	The Id of the active learner
 	 * @param integer $pass 	The Id of the test pass
+	 * @param boolean $authorizedSolution
 	 * @param boolean $returndetails (deprecated !!)
-	 * @return integer/array $points/$details (array $details is deprecated !!)
+	 * @return array|float $points/$details (array $details is deprecated !!)
 	 * @access public
 	 * @see  assQuestion::calculateReachedPoints()
 	 */
-	function calculateReachedPoints($active_id, $pass = NULL, $authorizedSolution = true, $returndetails = false)
+	public function calculateReachedPoints($active_id, $pass = NULL, $authorizedSolution = true, $returndetails = false) :array|float
 	{
 	    return 0;
-	} 
+	}
 	
 	/**
-	 * Saves the learners input of the question to the database
+	 * Saves the learners input of the question to the database.
 	 *
-	 * @param 	integer $test_id The database id of the test containing this question
+	 * @param integer $active_id 	Active id of the user
+	 * @param integer $pass 		Test pass
+	 * @param boolean $authorized	The solution is authorized
+	 *
 	 * @return 	boolean Indicates the save status (true if saved successful, false otherwise)
 	 * @access 	public
 	 * @see 	assQuestion::saveWorkingData()
@@ -485,6 +487,17 @@ class assInfotext extends assQuestion
 	}
 
 	/**
+	* Returns the name of the answer table in the database
+	*
+	* @return string The answer table name
+	* @access public
+	*/
+	function getAnswerTableName()
+	{
+		return "";
+	}
+
+	/**
 	 * Creates an Excel worksheet for the detailed cumulated results of this question
 	 *
 	 * @access public
@@ -493,19 +506,6 @@ class assInfotext extends assQuestion
 	public function setExportDetailsXLS(ilAssExcelFormatHelper $worksheet, int $startrow, int $active_id, int $pass): int
 	{
 		parent::setExportDetailsXLS($worksheet, $startrow, $active_id, $pass);
-				
-		//not needed anymore in 5.2?
-		/*
-		global $lng;
-				
-		include_once ("./Services/Excel/classes/class.ilExcelUtils.php");
-		$solutions = $this->getSolutionValues($active_id, $pass);
-		
-		$worksheet->writeString($startrow, 0, ilExcelUtils::_convert_text($this->plugin->txt($this->getQuestionType())), $format_title);
-		$worksheet->writeString($startrow, 1, ilExcelUtils::_convert_text($this->getTitle()), $format_title);
-
-		return $startrow + $i + 1;
-		*/
 		return $startrow + 1;
 	}
 }

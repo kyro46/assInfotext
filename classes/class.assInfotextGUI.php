@@ -146,7 +146,7 @@ class assInfotextGUI extends assQuestionGUI
 			$solutions = $this->object->getSolutionValues($active_id, $pass);
 
 			$template = $this->plugin->getTemplate("tpl.il_as_qpl_infotext_output.html");
-			$template->setVariable("QUESTIONTEXT", $this->object->prepareTextareaOutput( $this->object->getQuestion(), TRUE));
+			$template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
 				
 		}
 
@@ -165,7 +165,7 @@ class assInfotextGUI extends assQuestionGUI
 	public function getPreview($show_question_only = FALSE, $showInlineFeedback = false)
 	{
 		$template = $this->plugin->getTemplate("tpl.il_as_qpl_infotext_output.html");
-		$template->setVariable("QUESTIONTEXT", $this->object->prepareTextareaOutput( $this->object->getQuestion(), TRUE));
+		$template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
 		
 		$questionoutput = $template->get();
 		if(!$show_question_only)
@@ -186,7 +186,7 @@ class assInfotextGUI extends assQuestionGUI
 	 * @param boolean $show_feedback         Show the question feedback
 	 * @param boolean $show_correct_solution Show the correct solution instead of the user solution
 	 * @param boolean $show_manual_scoring   Show specific information for the manual scoring output
-	 * @return The solution output of the question as HTML code
+	 * @return string solution output of the question as HTML code
 	 */
 	function getSolutionOutput(
 	    $active_id,
@@ -211,10 +211,11 @@ class assInfotextGUI extends assQuestionGUI
 		$questiontext = $this->object->getQuestion();
 		if ($show_question_text==true)
 		{
-			$template->setVariable("QUESTIONTEXT", $this->object->prepareTextareaOutput($questiontext, TRUE));
+		    $template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
 		}
-
-		$template->setVariable("QUESTIONTEXT", $this->object->prepareTextareaOutput($questiontext, TRUE));
+		
+		// statt self:: ginge auch $this->object->getQuestionForHTMLOutput());
+		$template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
 
 		$questionoutput   = $template->get();
 
@@ -245,7 +246,7 @@ class assInfotextGUI extends assQuestionGUI
 	{
 		// By default no answer specific feedback is defined
 		$output = "";
-		return $this->object->prepareTextareaOutput($output, TRUE);
+		return self::prepareTextareaOutput($output, TRUE);
 	}
 	
 	
