@@ -3,14 +3,14 @@
 /**
  * Infotext GUI class for question type plugins
  *
- * @author	Christoph Jobst <christoph.jobst@llz.uni-halle.de>
+ * @author	Christoph Jobst <iliasplugins.christoph.jobst@outlook.de>
  * @version	$Id:  $
  * @ingroup ModulesTestQuestionPool
  *
  * @ilctrl_iscalledby assInfotextGUI: ilObjQuestionPoolGUI, ilObjTestGUI, ilQuestionEditGUI, ilTestExpressPageObjectGUI
  * @ilctrl_calls assInfotextGUI: ilFormPropertyDispatchGUI
  */
-class assInfotextGUI extends assQuestionGUI
+class assInfotextGUI extends assQuestionGUI implements ilGuiQuestionScoringAdjustable
 {
 	/**
 	 * @var ilassInfotextPlugin	The plugin object
@@ -51,16 +51,16 @@ class assInfotextGUI extends assQuestionGUI
 	 * @param bool $checkonly
 	 * @return bool
 	 */
-	public function editQuestion($checkonly = FALSE)
+	public function editQuestion(bool $checkonly = false, ?bool $is_save_cmd = null): bool
 	{
 	    global $DIC;
 	    $lng = $DIC->language();
 	    
-		$save = $this->isSaveCommand();
-		$this->getQuestionTemplate();
-		$plugin = $this->object->getPlugin();
+	    $this->getQuestionTemplate();
+	    $plugin = $this->object->getPlugin();
+	    
+	    $save = $is_save_cmd ?? $this->isSaveCommand();
 		
-		include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
 		$form = new ilPropertyFormGUI();
 		$form->setFormAction($this->ctrl->getFormAction($this));
 		$form->setTitle($this->outQuestionType());
@@ -69,16 +69,8 @@ class assInfotextGUI extends assQuestionGUI
 		$form->setId("infotext");
 
 		$this->addBasicQuestionFormProperties($form);
-		
-		// points
-		$points = new ilNumberInputGUI($plugin->txt("points"), "points");
-		$points->setSize(3);
-		$points->setMinValue(0);
-		$points->allowDecimals(1);
-		$points->setRequired(true);
-		$points->setValue($this->object->getPoints());
-		$form->addItem($points);
-		
+		$this->populateQuestionSpecificFormPart($form);
+		$this->populateAnswerSpecificFormPart($form);
 		$this->populateTaxonomyFormSection($form);
 		$this->addQuestionFormCommandButtons($form);
 
@@ -89,13 +81,17 @@ class assInfotextGUI extends assQuestionGUI
 			$form->setValuesByPost();
 			$errors = !$form->checkInput();
 			$form->setValuesByPost(); // again, because checkInput now performs the whole stripSlashes handling and we need this if we don't want to have duplication of backslashes
-			if ($errors) $checkonly = false;
+				
+			if ($errors) {
+			    $checkonly = false;
+			}
 		}
-
+		
 		if (!$checkonly)
 		{
-			$this->tpl->setVariable("QUESTION_DATA", $form->getHTML());
+		    $this->tpl->setVariable("QUESTION_DATA", $form->getHTML());
 		}
+
 		return $errors;
 	}
 
@@ -122,36 +118,29 @@ class assInfotextGUI extends assQuestionGUI
 	 * Get the HTML output of the question for a test
 	 * (this function could be private)
 	 * 
-	 * @param integer $active_id			The active user id
-	 * @param integer $pass					The test pass
-	 * @param boolean $is_postponed			Question is postponed
-	 * @param boolean $use_post_solutions	Use post solutions
-	 * @param boolean $show_feedback		Show a feedback
+	 * @param integer $active_id			           The active user id
+	 * @param integer $pass					           The test pass
+	 * @param boolean $is_question_postponed           Question is postponed
+	 * @param boolean $user_post_solutions	           Use post solutions
+	 * @param boolean $show_specific_inline_feedback   Show a feedback
 	 * @return string
 	 */
-	public function getTestOutput($active_id, $pass = NULL, $is_postponed = FALSE, $use_post_solutions = FALSE, $show_specific_inline_feedback = FALSE): string
-	{
-		// get the solution of the user for the active pass or from the last pass if allowed
-		$user_solution = null;
+    public function getTestOutput(
+        int $active_id,
+        int $pass,
+        bool $is_question_postponed = false,
+        array|bool $user_post_solutions = false,
+        bool $show_specific_inline_feedback = false
+        ): string {
+		// no solution to show for assInfotext
 		if ($active_id)
 		{
-			$user_solution = array();
-			include_once "./Modules/Test/classes/class.ilObjTest.php";
-			if (is_null($pass)) 
-			{
-				$pass = ilObjTest::_getPass($active_id);
-			}
-			$user_solution["active_id"] = $active_id;
-			$user_solution["pass"] = $pass;
-			$solutions = $this->object->getSolutionValues($active_id, $pass);
-
-			$template = $this->plugin->getTemplate("tpl.il_as_qpl_infotext_output.html");
+			$template = new ilTemplate("tpl.il_as_qpl_infotext_output.html", true, true, 'public/Customizing/global/plugins/Modules/TestQuestionPool/Questions/assInfotext');
 			$template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
-				
 		}
 
 		$questionoutput = $template->get();
-		$pageoutput = $this->outQuestionPage("", $is_postponed, $active_id, $questionoutput);
+		$pageoutput = $this->outQuestionPage("", $is_question_postponed, $active_id, $questionoutput);
 		return $pageoutput;
 	}
 
@@ -162,9 +151,10 @@ class assInfotextGUI extends assQuestionGUI
 	 * 
 	 * @param boolean	show only the question instead of embedding page (true/false)
 	 */
-	public function getPreview($show_question_only = FALSE, $showInlineFeedback = false)
+	public function getPreview(bool $show_question_only = false, bool $show_inline_feedback = false): string
 	{
-		$template = $this->plugin->getTemplate("tpl.il_as_qpl_infotext_output.html");
+	    $template = new ilTemplate("tpl.il_as_qpl_infotext_output.html", true, true, 'public/Customizing/global/plugins/Modules/TestQuestionPool/Questions/assInfotext');
+	    
 		$template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
 		
 		$questionoutput = $template->get();
@@ -189,16 +179,17 @@ class assInfotextGUI extends assQuestionGUI
 	 * @return string solution output of the question as HTML code
 	 */
 	function getSolutionOutput(
-	    $active_id,
-	    $pass = NULL,
-	    $graphicalOutput = FALSE,
-	    $result_output = FALSE,
-	    $show_question_only = TRUE,
-	    $show_feedback = FALSE,
-	    $show_correct_solution = FALSE,
-	    $show_manual_scoring = FALSE,
-	    $show_question_text = TRUE
-	): string
+	    int $active_id,
+	    ?int $pass = null,
+	    bool $graphical_output = false,
+	    bool $result_output = false,
+	    bool $show_question_only = true,
+	    bool $show_feedback = false,
+	    bool $show_correct_solution = false,
+	    bool $show_manual_scoring = false,
+	    bool $show_question_text = true,
+	    bool $show_inline_feedback = true
+	 ): string
 	{	
 		if ($show_correct_solution)
 		{
@@ -206,7 +197,8 @@ class assInfotextGUI extends assQuestionGUI
 		}
 		
 		// get the solution template
-		$template = $this->plugin->getTemplate("tpl.il_as_qpl_infotext_output.html");
+		$template = new ilTemplate("tpl.il_as_qpl_infotext_output.html", true, true, 'public/Customizing/global/plugins/Modules/TestQuestionPool/Questions/assInfotext');
+		
 
 		$questiontext = $this->object->getQuestion();
 		if ($show_question_text==true)
@@ -219,7 +211,7 @@ class assInfotextGUI extends assQuestionGUI
 
 		$questionoutput   = $template->get();
 
-		$solutiontemplate = new ilTemplate("tpl.il_as_tst_solution_output.html", TRUE, TRUE, "Modules/TestQuestionPool");
+		$solutiontemplate = new ilTemplate("tpl.il_as_tst_solution_output.html", TRUE, TRUE, "components/ILIAS/TestQuestionPool");
 		$solutiontemplate->setVariable("SOLUTION_OUTPUT", $questionoutput);
 
 		$feedback = ($show_feedback) ? $this->getGenericFeedbackOutput($active_id, $pass) : "";
@@ -258,5 +250,89 @@ class assInfotextGUI extends assQuestionGUI
 	{
 	    parent::setQuestionTabs();
 	}
+	
+	/**
+	 * Adds the question specific forms parts to a question property form gui.
+	 */
+	public function populateQuestionSpecificFormPart(ilPropertyFormGUI $form): ilPropertyFormGUI
+	{
+    	    $plugin = $this->object->getPlugin();
+    	    
+    	    // points
+    	    $points = new ilNumberInputGUI($plugin->txt("points"), "points");
+    	    $points->setSize(3);
+    	    $points->setMinValue(0);
+    	    $points->allowDecimals(1);
+    	    $points->setRequired(true);
+    	    $points->setValue($this->object->getPoints());
+    	    
+    	    $form->addItem($points);
+    	    return $form;
+	}
+	
+	/**
+	 * Extracts the question specific values from the request and applies them
+	 * to the data object.
+	 */
+	public function writeQuestionSpecificPostData(ilPropertyFormGUI $form): void
+	{  
+	    $this->object->setPoints($this->request_data_collector->float('points'));
+	}
+	
+	/**
+	 * Returns a list of postvars which will be suppressed in the form output when used in scoring adjustment.
+	 * The form elements will be shown disabled, so the users see the usual form but can only edit the settings, which
+	 * make sense in the given context.
+	 *
+	 * E.g. array('cloze_type', 'image_filename')
+	 *
+	 * @return string[]
+	 */
+	public function getAfterParticipationSuppressionQuestionPostVars(): array
+	{
+	    return [];
+	}
+	
+	public function populateAnswerSpecificFormPart(\ilPropertyFormGUI $form): ilPropertyFormGUI
+	{
+	    return $form;
+	}
+	
+	public function writeAnswerSpecificPostData(ilPropertyFormGUI $form): void
+	{
+	    #not needed for Infotext
+	}
+	
+	/**
+	 * Returns a list of postvars which will be suppressed in the form output when used in scoring adjustment.
+	 * The form elements will be shown disabled, so the users see the usual form but can only edit the settings, which
+	 * make sense in the given context.
+	 *
+	 * E.g. array('cloze_type', 'image_filename')
+	 *
+	 * @return string[]
+	 */
+	public function getAfterParticipationSuppressionAnswerPostVars(): array
+	{
+	    return [];
+	}
+
+	public function populateCorrectionsFormProperties(ilPropertyFormGUI $form): void
+	{
+	    $this->populateQuestionSpecificFormPart($form);
+	}
+	
+	/**
+	 * @param ilPropertyFormGUI $form
+	 */
+	public function saveCorrectionsFormProperties(ilPropertyFormGUI $form): void
+	{
+	    $this->object->setPoints((float) str_replace(',', '.', $form->getInput('points')));
+	}
+	
+	public function prepareReprintableCorrectionsForm(ilPropertyFormGUI $form): void
+	{
+	    #not needed for Infotext
+	}	
 }
 ?>

@@ -3,7 +3,7 @@
 /**
  * Question plugin Infotext: database update script
  *
- * @author Christoph Jobst <christoph.jobst@llz.uni-halle.de>
+ * @author Christoph Jobst <iliasplugins.christoph.jobst@outlook.de>
  * @version $Id$
  */ 
 

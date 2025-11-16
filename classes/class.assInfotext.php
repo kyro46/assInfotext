@@ -3,11 +3,14 @@
 /**
  * Infotext class for question type plugins
  *
- * @author	Christoph Jobst <christoph.jobst@llz.uni-halle.de>
+ * @author	Christoph Jobst <iliasplugins.christoph.jobst@outlook.de>
  * @version	$Id:  $
  * @ingroup ModulesTestQuestionPool
  */
-class assInfotext extends assQuestion
+
+use ILIAS\Test\Logging\AdditionalInformationGenerator;
+
+class assInfotext extends assQuestion implements ilObjQuestionScoringAdjustable
 {
 	/**
 	 * @var ilassInfotextPlugin	The plugin object
@@ -61,7 +64,7 @@ class assInfotext extends assQuestion
 	 *
 	 * @return mixed 	the name(s) of the additional tables (array or string)
 	 */
-	public function getAdditionalTableName()
+	public function getAdditionalTableName(): string 
 	{
 	    return '';
 	}
@@ -200,141 +203,50 @@ class assInfotext extends assQuestion
 	 *
 	 * @access public
 	 */
-	function duplicate($for_test = true, $title = "", $author = "", $owner = "", $testObjId = null) : int
-	{
-		if ($this->getId() <= 0)
-		{
-			// The question has not been saved. It cannot be duplicated
-			return -1;
-		}
-
-		// make a real clone to keep the object unchanged
-		$clone = clone $this;
-							
-		$original_id = $this->questioninfo->getOriginalId($this->id);
-		$clone->setId(-1);
-
-		if( (int) $testObjId > 0 )
-		{
-			$clone->setObjId($testObjId);
-		}
-
-		if (!empty($title))
-		{
-		    $clone->setTitle($title);
-		}
-		if (!empty($author))
-		{
-		    $clone->setAuthor($author);
-		}
-		if (!empty($owner))
-		{
-		    $clone->setOwner($owner);
-		}
-		
-		if ($for_test)
-		{
-		    $clone->saveToDb($original_id);
-		}
-		else
-		{
-		    $clone->saveToDb();
-		}		
-
-		// copy question page content
-		$clone->copyPageOfQuestion($this->getId());
-		// copy XHTML media objects
-		$clone->copyXHTMLMediaObjectsOfQuestion($this->getId());
-
-		// call the event handler for duplication
-		$clone->onDuplicate($this->getObjId(), $this->getId(), $clone->getObjId(), $clone->getId());
-
-		return $clone->getId();
+	public function duplicate(
+	    bool $for_test = true,
+	    string $title = '',
+	    string $author = '',
+	    int $owner = -1,
+	    $test_obj_id = null
+	    ): int {
+	        if ($this->id <= 0) {
+	            // The question has not been saved. It cannot be duplicated
+	            return -1;
+	        }
+	        
+	        $clone = clone $this;
+	        $clone->id = -1;
+	        
+	        if ((int) $test_obj_id > 0) {
+	            $clone->setObjId($test_obj_id);
+	        }
+	        
+	        if ($title) {
+	            $clone->setTitle($title);
+	        }
+	        if ($author) {
+	            $clone->setAuthor($author);
+	        }
+	        if ($owner) {
+	            $clone->setOwner($owner);
+	        }
+	        if ($for_test) {
+	            $clone->saveToDb($this->id);
+	        } else {
+	            $clone->saveToDb();
+	        }
+	        
+	        $clone->clonePageOfQuestion($this->getId());
+	        $clone->cloneXHTMLMediaObjectsOfQuestion($this->getId());
+	        
+	        $clone = $this->cloneQuestionTypeSpecificProperties($clone);
+	        
+	        $clone->onDuplicate($this->getObjId(), $this->getId(), $clone->getObjId(), $clone->getId());
+	        
+	        return $clone->id;
 	}
 
-	/**
-	 * Copies a question
-	 * This is used when a question is copied on a question pool
-	 *
-	 * @param integer	$target_questionpool_id
-	 * @param string	$title
-	 *
-	 * @return void|integer Id of the clone or nothing.
-	 */
-	function copyObject($target_questionpool_id, $title = '')
-	{
-		if ($this->getId() <= 0)
-		{
-			// The question has not been saved. It cannot be duplicated
-			return;
-		}
-
-		// make a real clone to keep the object unchanged
-		$clone = clone $this;
-				
-		$original_id = assQuestion::_getOriginalId($this->getId());
-		$source_questionpool_id = $this->getObjId();
-		$clone->setId(-1);
-		$clone->setObjId($target_questionpool_id);
-		if (!empty($title))
-		{
-			$clone->setTitle($title);
-		}
-				
-		// save the clone data
-		$clone->saveToDb();
-		
-		// copy question page content
-		$clone->copyPageOfQuestion($original_id);
-		// copy XHTML media objects
-		$clone->copyXHTMLMediaObjectsOfQuestion($original_id);
-
-		// call the event handler for copy
-		$clone->onCopy($source_questionpool_id, $original_id, $clone->getObjId(), $clone->getId());
-
-		return $clone->getId();
-	}
-
-	/**
-	 * Create a new original question in a question pool for a test question
-	 * @param int $targetParentId			id of the target question pool
-	 * @param string $targetQuestionTitle
-	 * @return int|void
-	 */
-	public function createNewOriginalFromThisDuplicate($targetParentId, $targetQuestionTitle = '')
-	{
-	    if ($this->id <= 0)
-	    {
-	        // The question has not been saved. It cannot be duplicated
-	        return;
-	    }
-	    
-	    $sourceQuestionId = $this->id;
-	    $sourceParentId = $this->getObjId();
-	    
-	    // make a real clone to keep the object unchanged
-	    $clone = clone $this;
-	    $clone->setId(-1);
-	    
-	    $clone->setObjId($targetParentId);
-	    
-	    if (!empty($targetQuestionTitle))
-	    {
-	        $clone->setTitle($targetQuestionTitle);
-	    }
-	    
-	    $clone->saveToDb();
-	    // copy question page content
-	    $clone->copyPageOfQuestion($sourceQuestionId);
-	    // copy XHTML media objects
-	    $clone->copyXHTMLMediaObjectsOfQuestion($sourceQuestionId);
-	    
-	    $clone->onCopy($sourceParentId, $sourceQuestionId, $clone->getObjId(), $clone->getId());
-	    
-	    return $clone->getId();
-	}
-	
-	
 	/**
 	 * Synchronize a question with its original
 	 * You need to extend this function if a question has additional data that needs to be synchronized
@@ -386,15 +298,14 @@ class assInfotext extends assQuestion
 	 * Returns the points, a learner has reached answering the question
 	 * The points are calculated from the given answers.
 	 *
-	 * @param integer $active 	The Id of the active learner
-	 * @param integer $pass 	The Id of the test pass
+	 * @param integer $active_id 	The Id of the active learner
+	 * @param ?integer $pass 	The Id of the test pass
 	 * @param boolean $authorizedSolution
-	 * @param boolean $returndetails (deprecated !!)
-	 * @return array|float $points/$details (array $details is deprecated !!)
+	 * @return float $points
 	 * @access public
 	 * @see  assQuestion::calculateReachedPoints()
 	 */
-	public function calculateReachedPoints($active_id, $pass = NULL, $authorizedSolution = true, $returndetails = false) :array|float
+	public function calculateReachedPoints(int $active_id, ?int $pass = null, bool $authorized_solution = true): float
 	{
 	    return 0;
 	}
@@ -410,67 +321,28 @@ class assInfotext extends assQuestion
 	 * @access 	public
 	 * @see 	assQuestion::saveWorkingData()
 	 */
-	function saveWorkingData($active_id, $pass = NULL, $authorized = true) : bool
-	{
-		global $ilDB;
-		global $ilUser;
-
-		if (is_null($pass))
-		{
-			include_once "./Modules/Test/classes/class.ilObjTest.php";
-			$pass = ilObjTest::_getPass($active_id);
-		}
-
-		$affectedRows = $ilDB->manipulateF("DELETE FROM tst_solutions WHERE active_fi = %s AND question_fi = %s AND pass = %s",
-			array(
-				"integer", 
-				"integer",
-				"integer"
-			),
-			array(
-				$active_id,
-				$this->getId(),
-				$pass
-			)
-		);
-		
-		// save the answers of the learner to tst_solution table
-		// this data is question type specific
-		// it is used used by calculateReachedPoints() in this class
-
-		$next_id      = $ilDB->nextId('tst_solutions');
-		$affectedRows = $ilDB->insert("tst_solutions", array(
-			"solution_id" => array("integer", $next_id),
-			"active_fi"   => array("integer", $active_id),
-			"question_fi" => array("integer", $this->getId()),
-			"pass"        => array("integer", $pass),
-			"tstamp"      => array("integer", time()),
-
-
-		));
-
-		// Check if the user has entered something
-		// Then set entered_values accordingly
-		if (!empty($_POST["question".$this->getId()."points"]))
-		{
-			$entered_values = TRUE;
-		}
-
-		// Log whether the user entered values
-		if (ilObjAssessmentFolder::_enabledAssessmentLogging())
-		{
-		    assQuestion::logAction($this->lng->txtlng(
-		        'assessment',
-		        $entered_values ? 'log_user_entered_values' : 'log_user_not_entered_values',
-		        ilObjAssessmentFolder::_getLogLanguage()
-		        ),
-		        $active_id,
-		        $this->getId()
-		        );
-		}
-
-		return true;
-	}
+    public function saveWorkingData(
+        int $active_id,
+        ?int $pass = null,
+        bool $authorized = true
+        ): bool {
+            if ($pass === null) {
+                $pass = ilObjTest::_getPass($active_id);
+            }
+            
+            $answer = $this->getSolutionSubmit();
+            $this->getProcessLocker()->executeUserSolutionUpdateLockOperation(
+                function () use ($answer, $active_id, $pass, $authorized) {
+                    $this->removeCurrentSolution($active_id, $pass, $authorized);
+                    
+                    if ($answer !== '') {
+                        $this->saveCurrentSolution($active_id, $pass, $answer, null, $authorized);
+                    }
+                }
+                );
+            
+            return true;
+    }
 
 
 	/**
@@ -489,10 +361,10 @@ class assInfotext extends assQuestion
 	/**
 	* Returns the name of the answer table in the database
 	*
-	* @return string The answer table name
+	* @return array|string The answer table name
 	* @access public
 	*/
-	function getAnswerTableName()
+	function getAnswerTableName() : array|string
 	{
 		return "";
 	}
@@ -503,10 +375,49 @@ class assInfotext extends assQuestion
 	 * @access public
 	 * @see assQuestion::setExportDetailsXLS()
 	 */
-	public function setExportDetailsXLS(ilAssExcelFormatHelper $worksheet, int $startrow, int $active_id, int $pass): int
+    public function setExportDetailsXLSX(ilAssExcelFormatHelper $worksheet, int $startrow, int $col, int $active_id, int $pass) : int
 	{
-		parent::setExportDetailsXLS($worksheet, $startrow, $active_id, $pass);
+	    parent::setExportDetailsXLSX($worksheet, $startrow, $col, $active_id, $pass);
 		return $startrow + 1;
 	}
+	
+	// Generic log
+	public function toLog(AdditionalInformationGenerator $additional_info) : array
+	{
+	    return [
+	        AdditionalInformationGenerator::KEY_QUESTION_TYPE => (string) $this->getQuestionType(),
+	        AdditionalInformationGenerator::KEY_QUESTION_TITLE => $this->getTitleForHTMLOutput(),
+	        AdditionalInformationGenerator::KEY_QUESTION_TEXT => $this->formatSAQuestion($this->getQuestion()),
+	        AdditionalInformationGenerator::KEY_QUESTION_REACHABLE_POINTS => $this->getPoints(),
+	        AdditionalInformationGenerator::KEY_FEEDBACK => [
+	           AdditionalInformationGenerator::KEY_QUESTION_FEEDBACK_ON_INCOMPLETE => $this->formatSAQuestion($this->feedbackOBJ->getGenericFeedbackTestPresentation($this->getId(), false)),
+	           AdditionalInformationGenerator::KEY_QUESTION_FEEDBACK_ON_COMPLETE => $this->formatSAQuestion($this->feedbackOBJ->getGenericFeedbackTestPresentation($this->getId(), true))
+	        ]
+	    ];
+	}
+	
+	// Infotext has no further log
+	public function solutionValuesToLog(AdditionalInformationGenerator $additional_info, array $solution_values) : string
+	{
+	    return 'Infotext';
+	}
+	
+	// Infotext has no further log
+	public function solutionValuesToText(array $solution_values) : string
+	{
+	    return 'Infotext';
+	}
+	
+	/**
+	 * Saves a record to the question types additional data table.
+	 *
+	 * @return mixed
+	 */
+	public function saveAdditionalQuestionDataToDb()
+	{
+	    // nothing to save for Infotext
+	    return 0;
+	}
+	
 }
 ?>

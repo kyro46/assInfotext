@@ -1,14 +1,11 @@
 <?php
-
-include_once "./Modules/TestQuestionPool/classes/export/qti12/class.assQuestionExport.php";
-
 /**
-* Infotext question export
-*
-* @author	Christoph Jobst <christoph.jobst@llz.uni-halle.de>
-* @version	$Id:  $
-* @ingroup ModulesTestQuestionPool
-*/
+ * Infotext question export
+ * 
+ * @author	Christoph Jobst <iliasplugins.christoph.jobst@outlook.de>
+ * @version	$Id: $
+ * @ingroup 	ModulesTestQuestionPool
+ */
 class assInfotextExport extends assQuestionExport
 {
 	/**
@@ -21,7 +18,6 @@ class assInfotextExport extends assQuestionExport
 	{
 		global $ilias;
 		
-		include_once("./Services/Xml/classes/class.ilXmlWriter.php");
 		$a_xml_writer = new ilXmlWriter;
 		// set xml header
 		$a_xml_writer->xmlHeader();
@@ -43,19 +39,23 @@ class assInfotextExport extends assQuestionExport
 		// add ILIAS specific metadata
 		$a_xml_writer->xmlStartTag("itemmetadata");
 		$a_xml_writer->xmlStartTag("qtimetadata");
+		
 		$a_xml_writer->xmlStartTag("qtimetadatafield");
 		$a_xml_writer->xmlElement("fieldlabel", NULL, "ILIAS_VERSION");
 		$a_xml_writer->xmlElement("fieldentry", NULL, $ilias->getSetting("ilias_version"));
 		$a_xml_writer->xmlEndTag("qtimetadatafield");
+		
 		$a_xml_writer->xmlStartTag("qtimetadatafield");
 		$a_xml_writer->xmlElement("fieldlabel", NULL, "QUESTIONTYPE");
 		$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getQuestionType());
 		$a_xml_writer->xmlEndTag("qtimetadatafield");
+		
 		$a_xml_writer->xmlStartTag("qtimetadatafield");
 		$a_xml_writer->xmlElement("fieldlabel", NULL, "AUTHOR");
 		$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getAuthor());
 		$a_xml_writer->xmlEndTag("qtimetadatafield");
 		$a_xml_writer->xmlStartTag("qtimetadatafield");
+		
 		$a_xml_writer->xmlElement("fieldlabel", NULL, "POINTS");
 		$a_xml_writer->xmlElement("fieldentry", NULL, $this->object->getPoints());
 		$a_xml_writer->xmlEndTag("qtimetadatafield");

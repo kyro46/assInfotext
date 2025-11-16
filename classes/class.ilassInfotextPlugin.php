@@ -1,11 +1,8 @@
 <?php
-
-include_once "./Modules/TestQuestionPool/classes/class.ilQuestionsPlugin.php";
-	
 /**
 * Question plugin Infotext
 *
-* @author Christoph Jobst <christoph.jobst@llz.uni-halle.de>
+* @author Christoph Jobst <iliasplugins.christoph.jobst@outlook.de>
 * @version $Id$
 * @ingroup ModulesTestQuestionPool
 */
