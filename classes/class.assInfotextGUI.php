@@ -63,7 +63,7 @@ class assInfotextGUI extends assQuestionGUI implements ilGuiQuestionScoringAdjus
 		
 		$form = new ilPropertyFormGUI();
 		$form->setFormAction($this->ctrl->getFormAction($this));
-		$form->setTitle($this->outQuestionType());
+		$form->setTitle($this->plugin->txt("edit_Infotext"));
 		$form->setMultipart(TRUE);
 		$form->setTableWidth("100%");
 		$form->setId("infotext");
