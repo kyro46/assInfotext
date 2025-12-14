@@ -136,7 +136,7 @@ class assInfotextGUI extends assQuestionGUI implements ilGuiQuestionScoringAdjus
 		if ($active_id)
 		{
 			$template = new ilTemplate("tpl.il_as_qpl_infotext_output.html", true, true, 'public/Customizing/global/plugins/Modules/TestQuestionPool/Questions/assInfotext');
-			$template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
+			$template->setVariable("QUESTIONTEXT", $this->object->getQuestionForHTMLOutput());
 		}
 
 		$questionoutput = $template->get();
@@ -155,7 +155,7 @@ class assInfotextGUI extends assQuestionGUI implements ilGuiQuestionScoringAdjus
 	{
 	    $template = new ilTemplate("tpl.il_as_qpl_infotext_output.html", true, true, 'public/Customizing/global/plugins/Modules/TestQuestionPool/Questions/assInfotext');
 	    
-		$template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
+		$template->setVariable("QUESTIONTEXT", $this->object->getQuestionForHTMLOutput());
 		
 		$questionoutput = $template->get();
 		if(!$show_question_only)
@@ -199,24 +199,20 @@ class assInfotextGUI extends assQuestionGUI implements ilGuiQuestionScoringAdjus
 		// get the solution template
 		$template = new ilTemplate("tpl.il_as_qpl_infotext_output.html", true, true, 'public/Customizing/global/plugins/Modules/TestQuestionPool/Questions/assInfotext');
 		
-
-		$questiontext = $this->object->getQuestion();
 		if ($show_question_text==true)
 		{
-		    $template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
+		    $template->setVariable("QUESTIONTEXT", $this->object->getQuestionForHTMLOutput());
+		    
 		}
 		
-		// statt self:: ginge auch $this->object->getQuestionForHTMLOutput());
-		$template->setVariable("QUESTIONTEXT", self::prepareTextareaOutput( $this->object->getQuestion(), TRUE));
-
 		$questionoutput   = $template->get();
 
 		$solutiontemplate = new ilTemplate("tpl.il_as_tst_solution_output.html", TRUE, TRUE, "components/ILIAS/TestQuestionPool");
 		$solutiontemplate->setVariable("SOLUTION_OUTPUT", $questionoutput);
 
 		$feedback = ($show_feedback) ? $this->getGenericFeedbackOutput($active_id, $pass) : "";
-		if (strlen($feedback)) $solutiontemplate->setVariable("FEEDBACK", $this->object->prepareTextareaOutput( $feedback, true ));
-
+		if (strlen($feedback)) $solutiontemplate->setVariable("FEEDBACK", ilLegacyFormElementsUtil::prepareTextareaOutput($feedback, true));
+		
 		$solutionoutput = $solutiontemplate->get();
 		if(!$show_question_only)
 		{
@@ -234,11 +230,10 @@ class assInfotextGUI extends assQuestionGUI implements ilGuiQuestionScoringAdjus
 	 * @return string HTML Code with the answer specific feedback
 	 * @access public
 	 */
-	public function getSpecificFeedbackOutput($userSolution): string
+	public function getSpecificFeedbackOutput(array $userSolution): string
 	{
-		// By default no answer specific feedback is defined
-		$output = "";
-		return self::prepareTextareaOutput($output, TRUE);
+	    // By default no answer specific feedback is defined
+	    return '';
 	}
 	
 	
