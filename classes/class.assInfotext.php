@@ -412,6 +412,12 @@ class assInfotext extends assQuestion
 	 */
 	function saveWorkingData($active_id, $pass = NULL, $authorized = true) : bool
 	{
+	    /*
+		// Placeholder for general qst-plugin structure demonstration.
+		// Code not required for Infotext, since it does not persist any participant input.
+		// Should be commented out due to the non-core patch that fixes saving within the question list,
+		// because that patch calls this method while bypassing the usual conditions.
+		// Leaving it would be harmless but the question could be marked as "answered", thus confusing users.
 		global $ilDB;
 		global $ilUser;
 
@@ -454,8 +460,13 @@ class assInfotext extends assQuestion
 		if (!empty($_POST["question".$this->getId()."points"]))
 		{
 			$entered_values = TRUE;
+		} else {
+		   $entered_values = FALSE;
 		}
-
+		*/
+	    
+	    $entered_values = FALSE;
+	    
 		// Log whether the user entered values
 		if (ilObjAssessmentFolder::_enabledAssessmentLogging())
 		{
